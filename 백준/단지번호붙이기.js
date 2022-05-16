@@ -1,67 +1,58 @@
-// 단지 번호 붙이기
+// 엣지케이스에서는 이전 로직이 오답으로 나왔다.
+// 확실히 vsited라는 체크배열을 만들어 활용하는 것이 정확도 적인 측면에서 뛰어났다.
 
-// 어딘가 이상하다..
-const input = `7
-0110100
-0110101
-1110101
-0000111
-0100000
-0111110
-0111000
-`
+// 이것 또한 BFS를 활용하여 풀었다.
+// 바이러스와 비슷한 문제
+
+const input = require("fs")
+  .readFileSync("/dev/stdin")
+  .toString()
   .trim()
   .split("\n");
 
 function solution(input) {
   const N = Number(input.shift());
-  // console.log(input.map(row => row.split('').map(ele => Number(ele))
+
   const graph = input.map((row) => row.split("").map((ele) => Number(ele)));
-  const distance = Array.from(Array(N), () => Array(N).fill(0));
+  let visited = Array.from(Array(N), () => Array(N).fill(0));
 
-  function BFS(firstX, firstY, idx) {
-    const queue = [[firstX, firstY]];
-    console.log(firstX, firstY, idx);
+  function BFS(x, y) {
+    const queue = [];
+    queue.push([x, y]);
 
-    const dx = [0, 1, 0, -1];
-    const dy = [1, 0, -1, 0];
+    visited[x][y] = 1;
+    const dx = [-1, 0, 1, 0];
+    const dy = [0, 1, 0, -1];
+    let count = 1;
 
     while (queue.length) {
-      const [x, y] = queue.shift();
+      let XY = queue.shift();
 
       for (let i = 0; i < 4; i++) {
-        const nx = x + dx[i];
-        const ny = y + dy[i];
+        const nx = XY[0] + dx[i];
+        const ny = XY[1] + dy[i];
 
         if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-        if (graph[nx][ny] && !distance[nx][ny]) {
-          // 집이 존재하고 가지않은 곳이라면
+        if (graph[nx][ny] === 1 && visited[nx][ny] === 0) {
           queue.push([nx, ny]);
-          distance[nx][ny] = idx;
-          graph[nx][ny] = 0;
+          visited[nx][ny] = 1;
+          count++;
         }
       }
     }
+    return count;
   }
 
-  while (true) {
-    BFS(0, 0, 1);
-    let groupNum = 2;
+  const result = [];
 
-    for (let x = 0; x < N; x++) {
-      const flag = graph[x].indexOf(1);
-      if (flag) {
-        BFS(x, flag, groupNum);
-        groupNum += 1;
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      if (graph[i][j] === 1 && visited[i][j] === 0) {
+        result.push(BFS(i, j));
       }
     }
-
-    break;
   }
-
-  let a = distance.flatMap((row) => row.filter((ele) => ele !== 0));
-  console.log(new Set([...a]));
-  // console.log(new Set([...distance.filter((ele) => ele !== 0)]));
+  return [result.length, ...result.sort((a, b) => a - b)];
 }
 
-console.log(solution(input));
+console.log(solution(input).join("\n"));
